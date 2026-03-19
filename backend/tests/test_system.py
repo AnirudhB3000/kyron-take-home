@@ -68,12 +68,13 @@ def test_app_configures_root_logging_for_info_traces() -> None:
     assert logging.getLogger().isEnabledFor(logging.INFO)
 
 
-def test_cors_allows_deployed_vercel_origin() -> None:
+def test_cors_allows_main_vercel_origin_for_scheduling_preflight() -> None:
     response = client.options(
-        "/api/health",
+        "/api/scheduling/conversations",
         headers={
             "Origin": "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app",
-            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
         },
     )
 
@@ -81,4 +82,21 @@ def test_cors_allows_deployed_vercel_origin() -> None:
     assert (
         response.headers["access-control-allow-origin"]
         == "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app"
+    )
+
+
+def test_cors_allows_preview_vercel_origin_for_scheduling_preflight() -> None:
+    response = client.options(
+        "/api/scheduling/conversations",
+        headers={
+            "Origin": "https://kyron-take-home-bmugt88lx-anirudhb3000s-projects.vercel.app",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert (
+        response.headers["access-control-allow-origin"]
+        == "https://kyron-take-home-bmugt88lx-anirudhb3000s-projects.vercel.app"
     )
