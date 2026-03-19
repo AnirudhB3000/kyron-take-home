@@ -1,0 +1,66 @@
+[
+  {
+    "id": "dr-olivia-bennett",
+    "name": "Dr. Olivia Bennett",
+    "specialty": "Orthopedics",
+    "body_part_focus": "knee and shoulder",
+    "supported_terms": [
+      "knee",
+      "kneecap",
+      "acl",
+      "meniscus",
+      "shoulder",
+      "rotator cuff",
+      "joint pain",
+      "sports injury"
+    ]
+  },
+  {
+    "id": "dr-marcus-chen",
+    "name": "Dr. Marcus Chen",
+    "specialty": "Dermatology",
+    "body_part_focus": "skin and scalp",
+    "supported_terms": [
+      "skin",
+      "scalp",
+      "rash",
+      "mole",
+      "acne",
+      "eczema",
+      "psoriasis",
+      "itching"
+    ]
+  },
+  {
+    "id": "dr-priya-nair",
+    "name": "Dr. Priya Nair",
+    "specialty": "Ophthalmology",
+    "body_part_focus": "eyes and vision",
+    "supported_terms": [
+      "eye",
+      "eyes",
+      "vision",
+      "blurry vision",
+      "dry eye",
+      "eye strain",
+      "red eye",
+      "eyelid"
+    ]
+  },
+  {
+    "id": "dr-isaac-morales",
+    "name": "Dr. Isaac Morales",
+    "specialty": "ENT",
+    "body_part_focus": "ear nose and throat",
+    "supported_terms": [
+      "ear",
+      "ears",
+      "nose",
+      "throat",
+      "sinus",
+      "sinuses",
+      "tonsils",
+      "hoarse voice"
+    ]
+  }
+]

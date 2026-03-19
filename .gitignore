@@ -1,0 +1,16 @@
+.env
+node_modules/
+dist/
+.pytest_cache/
+__pycache__/
+.venv/
+venv/
+pytest-cache-files-*/
+backend/logs/
+frontend/test-results/
+coverage/
+htmlcov/
+.coverage
+playwright-report/
+*.log
+TODO.md
