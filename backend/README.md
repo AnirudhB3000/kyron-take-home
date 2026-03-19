@@ -58,7 +58,8 @@ Notes:
 - `OPENAI_PROJECT_ID` or `OPENAI_SIP_URI` is needed for SIP-backed voice routing.
 - `OPENAI_WEBHOOK_SECRET` is the preferred webhook verification variable.
 - `OPENAI_WEBOOK_SIGNING_SECRET` is still supported for backward compatibility.
-- `TWILIO_WEBHOOK_BASE_URL` must be a public HTTPS base URL for live Twilio callbacks.
+- `TWILIO_WEBHOOK_BASE_URL` must be a public HTTPS base URL for live Twilio callbacks.`r`n- `FRONTEND_ORIGINS` can optionally add comma-separated browser origins beyond the built-in localhost and deployed Vercel defaults.
+- On Render, set `TWILIO_WEBHOOK_BASE_URL` to your public Render service URL or custom HTTPS domain.
 
 ## Start The Backend Server
 
@@ -66,6 +67,12 @@ From the `backend` directory:
 
 ```powershell
 ..\venv\Scripts\python -m uvicorn app.main:app --reload
+```
+
+For Render, use:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 The backend runs at:
@@ -148,3 +155,4 @@ Useful checks while the server is running:
 - `/api/voice/twiml`, `/api/voice/status`, `/api/voice/sip/events`, and `/api/voice/media` for voice troubleshooting
 
 For websocket breakpoints in VS Code, prefer the no-reload backend launch variant because reload mode forks a child process.
+

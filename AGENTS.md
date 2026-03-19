@@ -19,7 +19,7 @@ Consider using AWS EC2 for hosting, and ensure the website receives traffic via 
 - The frontend stack is React with Vite.
 - The backend stack is FastAPI.
 - The root `.env` file is the environment source for runtime configuration.
-- Backend config currently accepts `OPENAI_API_KEY`, `OPENAI_REALTIME_MODEL`, `OPENAI_VOICE_NAME`, optional `OPENAI_PROJECT_ID`, optional `OPENAI_SIP_URI`, optional `OPENAI_WEBHOOK_SECRET`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, and optional `TWILIO_WEBHOOK_BASE_URL` from the root `.env`.
+- Backend config currently accepts `OPENAI_API_KEY`, `OPENAI_REALTIME_MODEL`, `OPENAI_VOICE_NAME`, optional `OPENAI_PROJECT_ID`, optional `OPENAI_SIP_URI`, optional `OPENAI_WEBHOOK_SECRET`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, optional `TWILIO_WEBHOOK_BASE_URL`, and optional `FRONTEND_ORIGINS` from the root `.env`.
 - For backward compatibility, voice webhook signing can also be loaded from the legacy typoed env name `OPENAI_WEBOOK_SIGNING_SECRET`, but new config should use `OPENAI_WEBHOOK_SECRET`.
 - The realtime voice bridge should default to OpenAI's GA `gpt-realtime` model behavior, rely on `server_vad` turn detection to create responses, and avoid eager bootstrap `response.create` calls before the caller finishes speaking.
 - Backend tests live under `backend/tests`.
@@ -27,6 +27,7 @@ Consider using AWS EC2 for hosting, and ensure the website receives traffic via 
 - Repo-local generated artifacts such as `pytest-cache-files-*`, backend runtime logs, Playwright/Vitest output folders, coverage output, and virtualenv or dependency directories should stay out of git via `.gitignore`.
 - The root `README.md` should remain an accurate operator-facing guide for local setup, environment variables, scheduling workflows, voice handoff behavior, testing commands, and debugging entry points.
 - The nested `backend/README.md` and `frontend/README.md` should stay narrowly focused on setup, server startup, local verification, environment expectations, and test commands for their respective applications.
+- Frontend deployment-sensitive configuration such as the API base URL should remain environment-driven rather than hardcoded so local and hosted environments can coexist cleanly.
 - Backend API routes are mounted under `/api` and backend code is organized into `api`, `core`, `services`, `adapters`, and `schemas`.
 - Frontend code is organized into `app`, `components`, `features`, `services`, `lib`, `types`, and `tests`.
 - Frontend UI should prioritize end-user polish, use a liquid glass visual style, align with Kyron Medical colors, and include premium motion that makes the product feel cutting-edge.
@@ -58,5 +59,7 @@ Consider using AWS EC2 for hosting, and ensure the website receives traffic via 
 - SIP routing requires `OPENAI_PROJECT_ID` or `OPENAI_SIP_URI`; TwiML injects `x-handoff-id` into the SIP URI so OpenAI-side webhook events can be mapped back to the in-memory handoff.
 - `/api/voice/sip/events` must verify OpenAI webhook signatures when `OPENAI_WEBHOOK_SECRET` is configured, recover `handoff_id` from the SIP `To` header query string on `realtime.call.incoming`, call OpenAI's Realtime accept-call endpoint with the shared session instructions, and then open the sideband websocket using the webhook `call_id`.
 - SIP troubleshooting logs should now include the webhook request header subset and payload size, payload key summary, extracted handoff/session/call identifiers, accept-call start/result, sideband websocket bootstrap milestones, TwiML transport choice, and Twilio status callback payload keys so live call failures can be narrowed to a single stage from backend logs alone.
+
+
 
 

@@ -6,6 +6,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
+DEFAULT_FRONTEND_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app",
+)
 
 
 class Settings(BaseSettings):
@@ -25,6 +30,7 @@ class Settings(BaseSettings):
     twilio_auth_token: str | None = None
     twilio_phone_number: str | None = None
     twilio_webhook_base_url: str | None = None
+    frontend_origins: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=ROOT_DIR / ".env",
@@ -54,6 +60,17 @@ class Settings(BaseSettings):
             and self.twilio_auth_token
             and self.twilio_phone_number
         )
+
+    @computed_field
+    @property
+    def cors_allowed_origins(self) -> list[str]:
+        origins = list(DEFAULT_FRONTEND_ORIGINS)
+        if self.frontend_origins:
+            for origin in self.frontend_origins.split(","):
+                normalized_origin = origin.strip().rstrip("/")
+                if normalized_origin and normalized_origin not in origins:
+                    origins.append(normalized_origin)
+        return origins
 
 
 @lru_cache

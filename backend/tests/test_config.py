@@ -1,4 +1,4 @@
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 
 
 def test_settings_load_openai_api_key() -> None:
@@ -20,3 +20,29 @@ def test_settings_default_voice_transport_is_sip() -> None:
     settings = get_settings()
 
     assert settings.openai_realtime_transport == "sip"
+
+
+def test_settings_default_cors_origins_include_localhosts_and_deployed_vercel_url() -> None:
+    settings = Settings(openai_api_key="test-key", _env_file=None)
+
+    assert settings.cors_allowed_origins == [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app",
+    ]
+
+
+def test_settings_merge_additional_frontend_origins_from_env_var() -> None:
+    settings = Settings(
+        openai_api_key="test-key",
+        frontend_origins="https://kyron-take-home.vercel.app/, https://demo.kyron.example",
+        _env_file=None,
+    )
+
+    assert settings.cors_allowed_origins == [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app",
+        "https://kyron-take-home.vercel.app",
+        "https://demo.kyron.example",
+    ]

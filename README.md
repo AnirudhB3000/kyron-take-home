@@ -165,8 +165,8 @@ Notes:
 
 - `OPENAI_PROJECT_ID` or `OPENAI_SIP_URI` is needed for SIP-based voice routing.
 - `OPENAI_WEBHOOK_SECRET` is used to verify OpenAI SIP webhook signatures.
-- `TWILIO_WEBHOOK_BASE_URL` should point to the public HTTPS base URL Twilio can call.
-- The frontend currently targets `http://localhost:8000/api`.
+- `TWILIO_WEBHOOK_BASE_URL` should point to the public HTTPS base URL Twilio can call.`r`n- `FRONTEND_ORIGINS` can optionally add extra allowed browser origins for hosted frontend deployments.
+- The frontend reads `VITE_API_BASE_URL` when provided and otherwise falls back to `http://localhost:8000/api`.
 
 ## Local Development
 
@@ -196,6 +196,24 @@ npm run dev
 ```
 
 The web app will be available at `http://localhost:5173`.
+
+For deployed frontend builds such as Vercel, set:
+
+```text
+VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api
+```
+
+For a Render backend deploy, use this start command:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+If you want live Twilio voice callbacks against Render, set:
+
+```text
+TWILIO_WEBHOOK_BASE_URL=https://<your-render-service>.onrender.com
+```
 
 ### 4. Open The App
 
@@ -384,5 +402,7 @@ The repo includes VS Code launch configurations for backend debugging. For webso
 - [`backend/app/api/routes/system.py`](D:\bingbong\kyron-take-home\backend\app\api\routes\system.py)
 - [`backend/app/api/routes/voice.py`](D:\bingbong\kyron-take-home\backend\app\api\routes\voice.py)
 - [`frontend/src/features/scheduling/useSchedulingChat.js`](D:\bingbong\kyron-take-home\frontend\src\features\scheduling\useSchedulingChat.js)
+- [`frontend/src/lib/config.js`](D:\bingbong\kyron-take-home\frontend\src\lib\config.js)
 - [`shared/providers/providers.json`](D:\bingbong\kyron-take-home\shared\providers\providers.json)
 - [`shared/fixtures/availability.json`](D:\bingbong\kyron-take-home\shared\fixtures\availability.json)
+

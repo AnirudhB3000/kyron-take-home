@@ -66,3 +66,19 @@ def test_refill_request_endpoint_returns_stubbed_request_intake_response() -> No
 
 def test_app_configures_root_logging_for_info_traces() -> None:
     assert logging.getLogger().isEnabledFor(logging.INFO)
+
+
+def test_cors_allows_deployed_vercel_origin() -> None:
+    response = client.options(
+        "/api/health",
+        headers={
+            "Origin": "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert (
+        response.headers["access-control-allow-origin"]
+        == "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app"
+    )

@@ -18,13 +18,25 @@ npm install
 
 ## Backend Dependency
 
-The frontend currently calls:
+The frontend reads its API base URL from:
+
+```text
+VITE_API_BASE_URL
+```
+
+That value is defined through Vite environment variables in `src/lib/config.js`.
+
+For local development, the frontend falls back to:
 
 ```text
 http://localhost:8000/api
 ```
 
-That base URL is defined in `src/lib/config.js`.
+For Vercel production deploys, set:
+
+```text
+VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api
+```
 
 Before starting the frontend, start the backend server from `backend/`:
 
