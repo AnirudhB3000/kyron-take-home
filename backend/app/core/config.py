@@ -9,6 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parents[3]
 DEFAULT_FRONTEND_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://kyron-take-home.vercel.app"
 )
 DEFAULT_VERCEL_ORIGIN_REGEX = r"^https://kyron-take-home(?:-[a-z0-9-]+)?-anirudhb3000s-projects\.vercel\.app$"
 
