@@ -10,6 +10,7 @@ DEFAULT_FRONTEND_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://kyron-take-home-git-main-anirudhb3000s-projects.vercel.app",
+    "https://kyron-take-home-bmugt88lx-anirudhb3000s-projects.vercel.app/"
 )
 
 
