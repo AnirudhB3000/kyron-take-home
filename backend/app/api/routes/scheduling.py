@@ -14,6 +14,7 @@ from app.schemas.scheduling_api import (
     BookAppointmentResponse,
     CreateConversationResponse,
     CreateVoiceHandoffResponse,
+    ExtractIntakeRequest,
     GetVoiceHandoffContextResponse,
     ListSlotsResponse,
     ProcessTurnRequest,
@@ -82,25 +83,25 @@ def process_turn(
     )
 
 
-@router.patch("/conversations/{conversation_id}/intake", response_model=UpdateIntakeResponse)
-def update_intake(
-    conversation_id: str,
-    payload: UpdateIntakeRequest,
-) -> UpdateIntakeResponse:
+def _apply_intake_updates(conversation_id: str, intake_updates: dict[str, object]) -> UpdateIntakeResponse:
     previous_sms_opt_in = None
     try:
         existing_conversation = conversation_service.get_conversation(conversation_id)
         previous_sms_opt_in = existing_conversation.intake.sms_opt_in
         conversation = conversation_service.update_intake(
             conversation_id,
-            **payload.model_dump(),
+            **intake_updates,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Conversation not found.") from exc
     except IntakeValidationError as exc:
         raise HTTPException(status_code=400, detail=exc.message) from exc
 
-    if payload.sms_opt_in is True and previous_sms_opt_in is not True and conversation.intake.phone_number:
+    if (
+        intake_updates.get("sms_opt_in") is True
+        and previous_sms_opt_in is not True
+        and conversation.intake.phone_number
+    ):
         notification_service.send_sms_opt_in_confirmation(
             conversation_id=conversation.id,
             patient_first_name=conversation.intake.first_name or "",
@@ -108,12 +109,46 @@ def update_intake(
             patient_phone_number=conversation.intake.phone_number,
         )
 
+    captured_fields = [
+        field_name
+        for field_name, value in intake_updates.items()
+        if value not in (None, "")
+    ]
     return UpdateIntakeResponse(
         conversation_id=conversation.id,
         workflow_step=conversation.scheduling.workflow_step,
         missing_fields=conversation.scheduling.missing_fields,
         active_field=conversation.scheduling.active_field,
+        captured_fields=captured_fields,
     )
+
+
+@router.post("/conversations/{conversation_id}/intake-extract", response_model=UpdateIntakeResponse)
+def extract_intake(
+    conversation_id: str,
+    payload: ExtractIntakeRequest,
+) -> UpdateIntakeResponse:
+    try:
+        conversation = conversation_service.get_conversation(conversation_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Conversation not found.") from exc
+
+    extracted_updates = conversation_service.extract_intake_updates(conversation_id, payload.message)
+    if not extracted_updates:
+        active_field = conversation.scheduling.active_field
+        if active_field is None:
+            raise HTTPException(status_code=400, detail="No intake field is currently active.")
+        extracted_updates = {active_field: payload.message}
+
+    return _apply_intake_updates(conversation_id, extracted_updates)
+
+
+@router.patch("/conversations/{conversation_id}/intake", response_model=UpdateIntakeResponse)
+def update_intake(
+    conversation_id: str,
+    payload: UpdateIntakeRequest,
+) -> UpdateIntakeResponse:
+    return _apply_intake_updates(conversation_id, payload.model_dump())
 
 
 @router.post("/conversations/{conversation_id}/provider-match", response_model=ProviderMatchResponse)

@@ -21,11 +21,16 @@ class UpdateIntakeRequest(BaseModel):
     sms_opt_in: bool | None = None
 
 
+class ExtractIntakeRequest(BaseModel):
+    message: str
+
+
 class UpdateIntakeResponse(BaseModel):
     conversation_id: str
     workflow_step: str
     missing_fields: list[str]
     active_field: str | None = None
+    captured_fields: list[str] = []
 
 
 class ProcessTurnRequest(BaseModel):

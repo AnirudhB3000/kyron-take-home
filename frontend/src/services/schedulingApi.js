@@ -53,6 +53,14 @@ export async function updateIntake(conversationId, intake) {
   return createSchedulingConversationResponse(payload);
 }
 
+export async function extractIntake(conversationId, message) {
+  const payload = await request(`/scheduling/conversations/${conversationId}/intake-extract`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+  return createSchedulingConversationResponse(payload);
+}
+
 export async function matchProvider(conversationId) {
   const payload = await request(
     `/scheduling/conversations/${conversationId}/provider-match`,

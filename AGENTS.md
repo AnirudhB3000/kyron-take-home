@@ -33,6 +33,7 @@ Consider using AWS EC2 for hosting, and ensure the website receives traffic via 
 - Frontend UI should prioritize end-user polish, use a liquid glass visual style, align with Kyron Medical colors, and include premium motion that makes the product feel cutting-edge.
 - The Phase 13 frontend shell is a chat-first two-panel layout with workflow context cards, premium loading and confirmation framing, and liquid-glass motion; future polish should preserve that structure rather than reverting to a plain form UI.
 - The chat transcript should auto-scroll to the latest assistant or patient message by default, and the composer should submit on `Enter` while preserving `Shift+Enter` for multi-line input.
+- Chat auto-scroll should be confined to the transcript container itself; frontend message updates must not call document-level scrolling APIs that reset the page scrollbar on desktop layouts with both page and transcript overflow.
 - MVP provider and availability data are stored as structured shared fixtures under `shared/providers` and `shared/fixtures`.
 - Provider matching is deterministic and driven by shared fixture terms rather than LLM inference at this stage.
 - Conversation and scheduling workflow state are currently managed in-memory through backend service and schema layers until persistent storage is introduced.
@@ -50,6 +51,7 @@ Consider using AWS EC2 for hosting, and ensure the website receives traffic via 
 - For live voice troubleshooting, prefer the VS Code backend debug configuration in `.vscode/launch.json`; use the no-reload launch variant for websocket breakpoints because Uvicorn reload mode forks a child process. The `/api/voice/media` route also prints the raw first Twilio `start` event to the backend console so media-stream payload shape can be inspected even if logger formatting drops fields.
 - The frontend scheduling experience is driven by backend scheduling APIs, and frontend workflow behavior should treat backend scheduling state as authoritative.
 - Intake collection must remain resilient: invalid names, DOBs, phone numbers, emails, unsupported appointment reasons, off-topic questions, and alarming emergency language should keep the conversation safe and recoverable.
+- Intake parsing should accept free-form patient messages and infer as many intake fields as possible from a single turn; names, DOB, phone, email, and appointment reason may arrive together, and the backend extraction path should capture validated fields before asking only for the remaining missing detail.
 - The assistant must introduce itself before requesting patient data, route identity and site-clarification detours through the backend assistant layer, and require explicit confirmation before booking a chosen slot.
 - Backend safety decisions are authoritative and categorized as safe, medical_advice, or emergency; chat and future voice flows should preserve the active intake step while using those categories to choose the correct fallback behavior.
 - Local frontend development depends on backend CORS allowing the Vite dev origins `http://localhost:5173` and `http://127.0.0.1:5173`.

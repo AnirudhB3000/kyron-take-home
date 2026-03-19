@@ -111,3 +111,21 @@ def test_invalid_phone_number_does_not_advance_intake() -> None:
     refreshed = service.get_conversation(conversation.id)
     assert refreshed.intake.phone_number is None
     assert refreshed.scheduling.active_field == "first_name"
+
+
+def test_extracts_multiple_intake_fields_from_single_message() -> None:
+    service = ConversationService()
+    conversation = service.create_conversation()
+
+    updates = service.extract_intake_updates(
+        conversation.id,
+        "my name jeff marston. my email id is jeff@jeff.com, my phone is 2032020386, my problem is knee pain:",
+    )
+
+    assert updates == {
+        "email": "jeff@jeff.com",
+        "phone_number": "2032020386",
+        "first_name": "Jeff",
+        "last_name": "Marston",
+        "appointment_reason": "knee pain",
+    }

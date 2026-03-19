@@ -9,6 +9,7 @@ vi.mock("../services/schedulingApi", () => ({
   createConversation: vi.fn(),
   processTurn: vi.fn(),
   updateIntake: vi.fn(),
+  extractIntake: vi.fn(),
   matchProvider: vi.fn(),
   listSlots: vi.fn(),
   bookAppointment: vi.fn(),
@@ -46,6 +47,13 @@ describe("useSchedulingChat", () => {
       turn_type: "field_answer",
       active_field: "first_name",
       workflow_step: "intake",
+    });
+    schedulingApi.extractIntake.mockResolvedValue({
+      conversation_id: "conversation-1",
+      workflow_step: "intake",
+      missing_fields: ["last_name", "date_of_birth", "phone_number", "email", "appointment_reason"],
+      active_field: "last_name",
+      captured_fields: ["first_name"],
     });
   });
 
@@ -326,7 +334,7 @@ describe("useSchedulingChat", () => {
       active_field: "date_of_birth",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockRejectedValue(
+    schedulingApi.extractIntake.mockRejectedValue(
       new Error("Please enter a valid date of birth in YYYY-MM-DD format."),
     );
 
@@ -358,11 +366,12 @@ describe("useSchedulingChat", () => {
       active_field: "appointment_reason",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockResolvedValue({
+    schedulingApi.extractIntake.mockResolvedValue({
       conversation_id: "conversation-1",
       workflow_step: "provider_matching",
       missing_fields: [],
       active_field: null,
+      captured_fields: ["appointment_reason"],
     });
     schedulingApi.matchProvider.mockResolvedValue({
       matched: false,
@@ -397,18 +406,20 @@ describe("useSchedulingChat", () => {
       active_field: "appointment_reason",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake
+    schedulingApi.extractIntake
       .mockResolvedValueOnce({
         conversation_id: "conversation-1",
         workflow_step: "provider_matching",
         missing_fields: [],
         active_field: null,
+        captured_fields: ["appointment_reason"],
       })
       .mockResolvedValueOnce({
         conversation_id: "conversation-1",
         workflow_step: "provider_matching",
         missing_fields: [],
         active_field: null,
+        captured_fields: ["appointment_reason"],
       });
     schedulingApi.matchProvider
       .mockResolvedValueOnce({
@@ -482,11 +493,12 @@ describe("useSchedulingChat", () => {
       active_field: "appointment_reason",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockResolvedValue({
+    schedulingApi.extractIntake.mockResolvedValue({
       conversation_id: "conversation-1",
       workflow_step: "provider_matching",
       missing_fields: [],
       active_field: null,
+      captured_fields: ["appointment_reason"],
     });
     schedulingApi.matchProvider.mockResolvedValue({
       matched: true,
@@ -526,11 +538,12 @@ describe("useSchedulingChat", () => {
       active_field: "appointment_reason",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockResolvedValue({
+    schedulingApi.extractIntake.mockResolvedValue({
       conversation_id: "conversation-1",
       workflow_step: "provider_matching",
       missing_fields: [],
       active_field: null,
+      captured_fields: ["appointment_reason"],
     });
     schedulingApi.matchProvider.mockResolvedValue({
       matched: true,
@@ -564,6 +577,55 @@ describe("useSchedulingChat", () => {
     expect(schedulingApi.bookAppointment).toHaveBeenCalledWith("conversation-1", "slot-1");
   });
 
+  test("extracts multiple intake details from one free-form message", async () => {
+    schedulingApi.createConversation.mockResolvedValue({
+      conversation_id: "conversation-1",
+      workflow_step: "intake",
+      missing_fields: ["first_name", "last_name", "date_of_birth", "phone_number", "email", "appointment_reason"],
+      active_field: "first_name",
+    });
+    schedulingApi.extractIntake.mockResolvedValue({
+      conversation_id: "conversation-1",
+      workflow_step: "intake",
+      missing_fields: ["date_of_birth"],
+      active_field: "date_of_birth",
+      captured_fields: ["first_name", "last_name", "phone_number", "email", "appointment_reason"],
+    });
+    schedulingApi.updateIntake.mockResolvedValue({
+      conversation_id: "conversation-1",
+      workflow_step: "intake",
+      missing_fields: ["date_of_birth"],
+      active_field: "date_of_birth",
+      captured_fields: ["sms_opt_in"],
+    });
+
+    const { result } = renderHook(() => useSchedulingChat());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.submitUserMessage(
+        "my name jeff marston. my email id is jeff@jeff.com, my phone is 2032020386, my problem is knee pain:",
+      );
+    });
+
+    expect(schedulingApi.extractIntake).toHaveBeenCalledWith(
+      "conversation-1",
+      "my name jeff marston. my email id is jeff@jeff.com, my phone is 2032020386, my problem is knee pain:",
+    );
+    expect(result.current.canContinueByPhone).toBe(true);
+    expect(result.current.messages.at(-1).content).toMatch(/text updates/i);
+
+    await act(async () => {
+      await result.current.submitUserMessage("yes");
+    });
+
+    expect(schedulingApi.updateIntake).toHaveBeenCalledWith("conversation-1", { sms_opt_in: true });
+    expect(result.current.messages.at(-1).content).toMatch(/date of birth/i);
+  });
+
   test("asks about text updates immediately after collecting a phone number", async () => {
     schedulingApi.createConversation.mockResolvedValue({
       conversation_id: "conversation-1",
@@ -577,11 +639,12 @@ describe("useSchedulingChat", () => {
       active_field: "phone_number",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockResolvedValue({
+    schedulingApi.extractIntake.mockResolvedValue({
       conversation_id: "conversation-1",
       workflow_step: "intake",
       missing_fields: ["email"],
       active_field: "email",
+      captured_fields: ["phone_number"],
     });
 
     const { result } = renderHook(() => useSchedulingChat());
@@ -612,19 +675,20 @@ describe("useSchedulingChat", () => {
       active_field: "phone_number",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake
-      .mockResolvedValueOnce({
-        conversation_id: "conversation-1",
-        workflow_step: "intake",
-        missing_fields: ["email"],
-        active_field: "email",
-      })
-      .mockResolvedValueOnce({
-        conversation_id: "conversation-1",
-        workflow_step: "intake",
-        missing_fields: ["email"],
-        active_field: "email",
-      });
+    schedulingApi.extractIntake.mockResolvedValue({
+      conversation_id: "conversation-1",
+      workflow_step: "intake",
+      missing_fields: ["email"],
+      active_field: "email",
+      captured_fields: ["phone_number"],
+    });
+    schedulingApi.updateIntake.mockResolvedValue({
+      conversation_id: "conversation-1",
+      workflow_step: "intake",
+      missing_fields: ["email"],
+      active_field: "email",
+      captured_fields: ["sms_opt_in"],
+    });
 
     const { result } = renderHook(() => useSchedulingChat());
 
@@ -640,8 +704,8 @@ describe("useSchedulingChat", () => {
       await result.current.submitUserMessage("yes");
     });
 
-    expect(schedulingApi.updateIntake).toHaveBeenNthCalledWith(1, "conversation-1", { phone_number: "555-123-4567" });
-    expect(schedulingApi.updateIntake).toHaveBeenNthCalledWith(2, "conversation-1", { sms_opt_in: true });
+    expect(schedulingApi.extractIntake).toHaveBeenCalledWith("conversation-1", "555-123-4567");
+    expect(schedulingApi.updateIntake).toHaveBeenCalledWith("conversation-1", { sms_opt_in: true });
     expect(result.current.messages.at(-1).content).toMatch(/send text updates to this number/i);
     expect(result.current.messages.at(-1).content).toMatch(/email address/i);
   });
@@ -681,11 +745,12 @@ describe("useSchedulingChat", () => {
       active_field: "phone_number",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockResolvedValue({
+    schedulingApi.extractIntake.mockResolvedValue({
       conversation_id: "conversation-1",
       workflow_step: "intake",
       missing_fields: ["email"],
       active_field: "email",
+      captured_fields: ["phone_number"],
     });
     schedulingApi.startVoiceHandoff.mockResolvedValue({
       handoff_id: "handoff-1",
@@ -725,11 +790,12 @@ describe("useSchedulingChat", () => {
       active_field: "phone_number",
       workflow_step: "intake",
     });
-    schedulingApi.updateIntake.mockResolvedValue({
+    schedulingApi.extractIntake.mockResolvedValue({
       conversation_id: "conversation-1",
       workflow_step: "intake",
       missing_fields: ["email"],
       active_field: "email",
+      captured_fields: ["phone_number"],
     });
     schedulingApi.startVoiceHandoff.mockRejectedValue(
       new Error("Unable to prepare the phone handoff right now."),

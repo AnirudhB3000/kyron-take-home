@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   bookAppointment,
   createConversation,
+  extractIntake,
   listSlots,
   matchProvider,
   processTurn,
@@ -329,11 +330,12 @@ export function useSchedulingChat() {
         return;
       }
 
-      const response = await updateIntake(conversationId, { [currentField]: trimmedInput });
+      const response = await extractIntake(conversationId, trimmedInput);
+      const capturedFields = response.captured_fields || [];
       setMissingFields(response.missing_fields);
       setActiveField(response.active_field || response.missing_fields[0] || null);
       setWorkflowStep(response.workflow_step);
-      if (currentField === "phone_number") {
+      if (capturedFields.includes("phone_number")) {
         setCanContinueByPhone(true);
         setAwaitingSmsOptIn(true);
         setMessages((current) => [...current, createMessage("assistant", SMS_OPT_IN_PROMPT)]);

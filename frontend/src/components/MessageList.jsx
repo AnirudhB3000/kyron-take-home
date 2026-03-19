@@ -1,16 +1,25 @@
 import { useEffect, useRef } from "react";
 
 export default function MessageList({ messages }) {
-  const endRef = useRef(null);
+  const listRef = useRef(null);
 
   useEffect(() => {
-    if (typeof endRef.current?.scrollIntoView === "function") {
-      endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    const listElement = listRef.current;
+    if (!listElement) {
+      return;
     }
+
+    const targetTop = listElement.scrollHeight;
+    if (typeof listElement.scrollTo === "function") {
+      listElement.scrollTo({ top: targetTop, behavior: "smooth" });
+      return;
+    }
+
+    listElement.scrollTop = targetTop;
   }, [messages]);
 
   return (
-    <div className="message-list" aria-live="polite">
+    <div ref={listRef} className="message-list" aria-live="polite">
       {messages.map((message) => (
         <article
           key={message.id}
@@ -22,7 +31,6 @@ export default function MessageList({ messages }) {
           <p>{message.content}</p>
         </article>
       ))}
-      <div ref={endRef} aria-hidden="true" />
     </div>
   );
 }

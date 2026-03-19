@@ -321,6 +321,37 @@ def test_turn_endpoint_handles_medical_advice_requests() -> None:
     assert "cannot provide medical advice" in payload["assistant_message"]
 
 
+def test_intake_extract_endpoint_captures_multiple_fields_from_single_message() -> None:
+    create_response = client.post("/api/scheduling/conversations")
+    conversation_id = create_response.json()["conversation_id"]
+
+    extract_response = client.post(
+        f"/api/scheduling/conversations/{conversation_id}/intake-extract",
+        json={
+            "message": "my name jeff marston. my email id is jeff@jeff.com, my phone is 2032020386, my problem is knee pain:",
+        },
+    )
+
+    assert extract_response.status_code == 200
+    payload = extract_response.json()
+    assert payload["workflow_step"] == "intake"
+    assert payload["active_field"] == "date_of_birth"
+    assert payload["captured_fields"] == [
+        "email",
+        "phone_number",
+        "first_name",
+        "last_name",
+        "appointment_reason",
+    ]
+
+    conversation = scheduling_routes.conversation_service.get_conversation(conversation_id)
+    assert conversation.intake.first_name == "Jeff"
+    assert conversation.intake.last_name == "Marston"
+    assert conversation.intake.email == "jeff@jeff.com"
+    assert conversation.intake.phone_number == "2032020386"
+    assert conversation.intake.appointment_reason == "knee pain"
+
+
 def test_unsupported_reason_can_recover_to_successful_slot_listing() -> None:
     create_response = client.post("/api/scheduling/conversations")
     conversation_id = create_response.json()["conversation_id"]

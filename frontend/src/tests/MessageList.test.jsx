@@ -4,10 +4,14 @@ import { vi } from "vitest";
 import MessageList from "../components/MessageList";
 
 describe("MessageList", () => {
-  test("scrolls to the latest message when messages change", () => {
-    const scrollIntoView = vi.fn();
+  test("scrolls the chat container to the latest message when messages change", () => {
+    const scrollTo = vi.fn();
 
-    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    Object.defineProperty(window.HTMLElement.prototype, "scrollHeight", {
+      configurable: true,
+      get: () => 240,
+    });
+    window.HTMLElement.prototype.scrollTo = scrollTo;
 
     const { rerender } = render(
       <MessageList
@@ -26,7 +30,7 @@ describe("MessageList", () => {
       />,
     );
 
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(scrollTo).toHaveBeenCalledWith({ top: 240, behavior: "smooth" });
   });
 
   test("renders assistant messages", () => {
